@@ -1,0 +1,6 @@
+Exercice 1
+
+1) Lors de l'éxécution, 3 processus fils sont créés (on obtient donc 4 processus au final). En effet, quand le premer fork est efectué, il en résulte deux cas : dans le processus fils, la valeur de retour est 0, le reste de l'expression n'est pas évaluée. Dans le processus père, la fonction renvoie une valeur positive, on rentre donc dans la deuxième partie de l'opérateur &&. Le raisonnement est le même dans la parenthèse : mais le derier fork est seulement évalué si la première partie du || est positive. Il en résulte la création de 3 processus fils.
+
+2) Dessiner l'arbre
+
