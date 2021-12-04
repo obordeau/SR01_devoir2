@@ -4,47 +4,39 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
-#include <string.h>
 
 #define LEN 150
 #define MAX 100
 #define SEUIL 3
 
-int ecrire_fils(int nb, char *name)
+void ecrire_fils(int nb, char *name)
 {
     FILE *file = fopen(name, "w");
     if (file == NULL)
     {
-        return EXIT_FAILURE;
+        perror("fopen");
+        exit(EXIT_FAILURE);
     }
     if (fputc(nb, file) == EOF)
     {
-        return EXIT_FAILURE;
+        perror("fputc");
+        exit(EXIT_FAILURE);
     }
-    if (fclose(file) == 0)
+    if (fclose(file) != 0)
     {
-        return EXIT_SUCCESS;
+        perror("fclose");
+        exit(EXIT_FAILURE);
     }
-    else
-    {
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
 }
 
-int lire_pere(int *nb, char *name)
+void lire_pere(int *nb, char *name)
 {
     FILE *file = fopen(name, "r");
 
-    if (file == NULL)
+    if (!file)
     {
-        fprintf(stderr, "Le fichier n'a pas pu être ouvert\n");
-        return 1;
-    }
-    else
-    {
-        printf("Fichier ouvert en lecture\n");
+        perror("fopen");
+        exit(EXIT_FAILURE);
     }
     int n = (int)fgetc(file);
     if (n != EOF)
@@ -53,18 +45,13 @@ int lire_pere(int *nb, char *name)
     }
     if (fclose(file) == EOF)
     {
-        fprintf(stderr, "Erreur lors de la fermeture du flux\n");
-        return 1;
+        perror("fclose");
+        exit(EXIT_FAILURE);
     }
-    if (remove(name) == 0)
+    if (remove(name) != 0)
     {
-        printf("Le fichier a été détruit avec succès.\n");
-    }
-    else
-    {
-        printf("Impossible de détruire le fichier\n");
-        perror("Erreur");
-        return 1;
+        perror("remove file");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -98,20 +85,12 @@ int find_max(int *tab, int debut, int fin)
         int max_debut = tab[debut];
         int max_fin = tab[fin];
 
-        printf("Création de deux processus\n");
         pid_t pid1 = fork();
         if (pid1 == 0)
         {
-            printf("Ici le fils 1 %d, tableau a evaluer : [%d:%d]\n", getpid(), debut, (debut + fin) / 2);
-            printf("Fils 1 %d stop\n", getpid());
             kill(getpid(), SIGSTOP);
-            printf("Reprise fils 1 %d\n", getpid());
             int local_max = find_max(tab, debut, (debut + fin) / 2);
-            int ctrl = ecrire_fils(local_max, "fichier1");
-            if (ctrl == 0)
-            {
-                printf("Ecriture fichier 1 ok\n");
-            }
+            ecrire_fils(local_max, "fichier1");
             exit(EXIT_SUCCESS);
         }
         pid_t pid2 = fork();
@@ -119,23 +98,28 @@ int find_max(int *tab, int debut, int fin)
         {
             printf("Ici le fils 2 %d, tableau a evaluer : [%d:%d]\n", getpid(), ((debut + fin) / 2) + 1, fin);
             int local_max = find_max(tab, ((debut + fin) / 2) + 1, fin);
-            int ctrl = ecrire_fils(local_max, "fichier2");
-            if (ctrl == 0)
-            {
-                printf("Ecriture fichier 2 ok\n");
-            }
+            ecrire_fils(local_max, "fichier2");
             exit(EXIT_SUCCESS);
         }
         else
         {
-            waitpid(pid2, &status1, 0);
+            if (waitpid(pid2, &status2, 0) == -1)
+            {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
+            }
             int max_fin;
             lire_pere(&max_fin, "fichier2");
             printf("MAX FIN : %d\n", max_fin);
             printf("Fin fils2 %d\n", pid2);
             printf("fils 1 %d back\n", pid1);
             kill(pid1, SIGCONT);
-            waitpid(pid1, &status2, 0);
+
+            if (waitpid(pid1, &status1, 0) == -1)
+            {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
+            }
             printf("Fin fils1 %d\n", pid1);
             int max_debut;
             lire_pere(&max_debut, "fichier1");
