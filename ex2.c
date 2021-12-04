@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 void ecrire_fils(int nb, char *name)
 {
@@ -44,45 +45,54 @@ void lire_pere(int *nb, char *name)
         fprintf(stderr, "Erreur lors de la fermeture du flux\n");
         exit(1);
     }
-    if (remove(name) == 0)
-    {
-        printf(" Le fichier a été détruit avec succès.\n");
-    }
-    else
-    {
-        printf("Impossible de détruire le fichier\n");
-        perror("Erreur");
-        exit(1);
-    }
+    remove(name);
 }
 
 int main(int argc, char const *argv[])
 {
-    pid_t pid = fork();
-    char fichier[] = "fichier";
+    pid_t pid1 = fork();
+    char name1[] = "fichier1";
+    char name2[] = "fichier2";
     int status;
-    switch (pid)
+    if (pid1 == 0)
     {
-    case -1:
-        printf("Erreur fork\n");
-        break;
-    case 0:
-        printf("Je suis le fils\n");
-        int n = 5;
-        printf(" Je vais écrire %d dans le fichier %s\n", n, fichier);
-        ecrire_fils(n, fichier);
-        break;
-    default:
-        printf("Je suis le père\n");
-        printf(" Je vais récupérer le chiffre écrit par mon fils dans le fichier %s\n", fichier);
-        wait(&status);
-        if (status == 0)
+        printf("Je stop le fils 1 %d\n", getpid());
+        kill(getpid(), SIGSTOP);
+        printf("Je suis le fils 1 %d\n", getpid());
+        int nb1 = 5;
+        printf(" Je vais écrire %d dans le fichier \"%s\"\n", nb1, name1);
+        ecrire_fils(nb1, name1);
+    }
+    pid_t pid2 = fork();
+    if (pid2 == 0)
+    {
+        printf("Je suis le fils 2\n");
+        int nb2 = 15;
+        printf(" Je vais écrire %d dans le fichier \"%s\"\n", nb2, name2);
+        ecrire_fils(nb2, name2);
+    }
+    else
+    {
+        printf("%d", pid1);
+        int k = kill(pid1, SIGCONT);
+        if (k != 0)
         {
-            int *nb = (int *)malloc(sizeof(int));
-            lire_pere(nb, fichier);
-            printf("Le fils avait écrit %d dans le fichier\n", *nb);
+            printf("pas kill");
         }
-        break;
+        int st_fils;
+        if (waitpid(-1, &st_fils, WCONTINUED) == -1)
+        {
+            perror("intercepter/waitpid");
+        }
+        printf("Je suis le père\n");
+        printf(" Je vais récupérer le chiffre écrit par mon fils 1 dans le fichier \"%s\"\n", name1);
+        int *nb1 = (int *)malloc(sizeof(int));
+        lire_pere(nb1, name1);
+        printf("Le fils 1 avait écrit %d dans le fichier\n", *nb1);
+        printf(" Je vais récupérer le chiffre écrit par mon fils 2 dans le fichier \"%s\"\n", name2);
+        int *nb2 = (int *)malloc(sizeof(int));
+        lire_pere(nb2, name2);
+        printf("Le fils 2 avait écrit %d dans le fichier\n", *nb2);
     }
     return 0;
 }
