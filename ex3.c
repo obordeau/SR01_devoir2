@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <time.h>
 
-#define LEN 150
+#define LEN 10
 #define MAX 100
 #define SEUIL 3
 
@@ -96,7 +96,6 @@ int find_max(int *tab, int debut, int fin)
         pid_t pid2 = fork();
         if (pid2 == 0)
         {
-            printf("Ici le fils 2 %d, tableau a evaluer : [%d:%d]\n", getpid(), ((debut + fin) / 2) + 1, fin);
             int local_max = find_max(tab, ((debut + fin) / 2) + 1, fin);
             ecrire_fils(local_max, "fichier2");
             exit(EXIT_SUCCESS);
@@ -110,22 +109,16 @@ int find_max(int *tab, int debut, int fin)
             }
             int max_fin;
             lire_pere(&max_fin, "fichier2");
-            printf("MAX FIN : %d\n", max_fin);
-            printf("Fin fils2 %d\n", pid2);
-            printf("fils 1 %d back\n", pid1);
-            kill(pid1, SIGCONT);
 
+            kill(pid1, SIGCONT);
             if (waitpid(pid1, &status1, 0) == -1)
             {
                 perror("waitpid");
                 exit(EXIT_FAILURE);
             }
-            printf("Fin fils1 %d\n", pid1);
             int max_debut;
             lire_pere(&max_debut, "fichier1");
-            printf("MAX DEBUT : %d\n", max_debut);
 
-            printf("Le max du debut est %d et de fin est %d pour le tableau [%d : %d]\n", max_debut, max_fin, debut, fin);
             return maxi(max_debut, max_fin);
         }
     }
