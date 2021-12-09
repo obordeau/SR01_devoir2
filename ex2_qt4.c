@@ -3,7 +3,8 @@
 #include <unistd.h>    // getpid()...
 #include <sys/types.h> // pid_t
 #include <sys/wait.h>  // wait()...
-#define FICHIER "fichier"
+
+#define NOMFICHIER "fichier"
 #define NB 5
 
 void ecrire_fils(int nb, char *name)
@@ -59,24 +60,23 @@ int main(int argc, char const *argv[])
     int status;
     switch (pid)
     {
-    case -1:
+    case -1: // si pid == -1 alors le fork n'a pas fonctionné
         printf("Erreur fork\n");
         break;
-    case 0:
+    case 0: // si pid == 0 alors on est dans le fils
         printf("Je suis le fils\n");
-        int n = 5;
-        printf(" Je vais écrire %d dans le fichier \"%s\"\n", NB, FICHIER);
-        ecrire_fils(NB, FICHIER);
+        printf(" Je vais écrire %d dans le fichier \"%s\"\n", NB, NOMFICHIER);
+        ecrire_fils(NB, NOMFICHIER); // on écrit NB dans le fichier de nom NOMFICHIER
         break;
-    default:
-        wait(&status);
+    default:           // sinon pid > 0 alors on est dans le père
+        wait(&status); // on attends que son fils retourne un statut
         printf("Je suis le père\n");
-        printf(" Je vais récupérer le chiffre écrit par mon fils dans le fichier \"%s\"\n", FICHIER);
-        if (status == 0)
+        if (status == 0) // si le statut retourné est 0 alors son fils a bien écrit dans le fichier
         {
+            printf(" Je vais récupérer le chiffre écrit par mon fils dans le fichier \"%s\"\n", NOMFICHIER);
             int nb;
-            lire_pere(&nb, FICHIER);
-            printf("Le fils avait écrit %d dans le fichier\n", nb);
+            lire_pere(&nb, NOMFICHIER);                             // on récupère le nombre écrit dans le fichier par son fils
+            printf("Le fils avait écrit %d dans le fichier\n", nb); // affichage du résultat
         }
         break;
     }
