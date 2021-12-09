@@ -3,58 +3,59 @@
 #include <unistd.h>    // getpid()...
 #include <sys/types.h> // pid_t
 #include <sys/wait.h>  // wait()...
+#define FICHIER "fichier"
+#define NB 5
 
 void ecrire_fils(int nb, char *name)
 {
-    FILE *file = fopen(name, "w");
-    if (file == NULL)
+    FILE *file = fopen(name, "w"); // ouverture du fichier de nom name
+    if (file == NULL)              // ouverture mal déroulée
     {
-        perror("fopen");
-        exit(1);
+        perror("fopen"); // erreur d'ouverture
+        exit(1);         // sortie fonction
     }
-    if (fputc(nb, file) == EOF)
-    {
-        perror("fputc");
-        exit(1);
+    if (fputc(nb, file) == EOF) // écriture de nb dans le fichier ouvert
+    {                           // écriture mal déroulée
+        perror("fputc");        // erreur d'écriture
+        exit(1);                // sortie fonction
     }
-    if (fclose(file) == EOF)
-    {
-        perror("fclose");
-        exit(1);
+    if (fclose(file) == EOF) // fermeture du fichier
+    {                        // fichier mal fermé
+        perror("fclose");    // erreur de fermeture
+        exit(1);             // sortie fonction
     }
 }
 
 void lire_pere(int *nb, char *name)
 {
-    FILE *file = fopen(name, "r");
+    FILE *file = fopen(name, "r"); // ouverture du fichier de nom name
 
-    if (file == NULL)
+    if (file == NULL) // ouverture mal déroulée
     {
-        perror("fopen");
-        exit(1);
+        perror("fopen"); // erreur d'ouverture
+        exit(1);         // sortie fonction
     }
-    int n = fgetc(file);
-    if (n != EOF)
+    int n = fgetc(file); // lecture du caractère écrit dans le fichier
+    if (n != EOF)        // lecture effectuée sans erreur
     {
-        *nb = n;
+        *nb = n; // la valeur pointée par nb prend la valeur récupérée
     }
-    if (fclose(file) == EOF)
-    {
-        perror("fclose");
-        exit(1);
+    if (fclose(file) == EOF) // fermeture du fichier
+    {                        // fichier mal fermé
+        perror("fclose");    // erreur de fermeture
+        exit(1);             // sortie fonction
     }
     //Ajouté à la question 3
-    if (remove(name) != 0)
-    {
-        perror("remove file");
-        exit(1);
+    if (remove(name) != 0)     // on détruit le fichier name
+    {                          // fichier mal détruit
+        perror("remove file"); // erreur de destruction
+        exit(1);               // sortie fonction
     }
 }
 
 int main(int argc, char const *argv[])
 {
-    pid_t pid = fork();
-    char fichier[] = "fichier";
+    pid_t pid = fork(); // on crée un processus fils à l'aide de fork
     int status;
     switch (pid)
     {
@@ -64,18 +65,18 @@ int main(int argc, char const *argv[])
     case 0:
         printf("Je suis le fils\n");
         int n = 5;
-        printf(" Je vais écrire %d dans le fichier \"%s\"\n", n, fichier);
-        ecrire_fils(n, fichier);
+        printf(" Je vais écrire %d dans le fichier \"%s\"\n", NB, FICHIER);
+        ecrire_fils(NB, FICHIER);
         break;
     default:
         wait(&status);
         printf("Je suis le père\n");
-        printf(" Je vais récupérer le chiffre écrit par mon fils dans le fichier \"%s\"\n", fichier);
+        printf(" Je vais récupérer le chiffre écrit par mon fils dans le fichier \"%s\"\n", FICHIER);
         if (status == 0)
         {
-            int *nb = (int *)malloc(sizeof(int));
-            lire_pere(nb, fichier);
-            printf("Le fils avait écrit %d dans le fichier\n", *nb);
+            int nb;
+            lire_pere(&nb, FICHIER);
+            printf("Le fils avait écrit %d dans le fichier\n", nb);
         }
         break;
     }
