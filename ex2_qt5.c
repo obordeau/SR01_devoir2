@@ -3,6 +3,7 @@
 #include <unistd.h>    // getpid()...
 #include <sys/types.h> // pid_t
 #include <sys/wait.h>  // wait()...
+#include <errno.h>     // perror()
 
 #define NOMFICHIER1 "fichier1"
 #define NB1 7
@@ -62,29 +63,34 @@ int main(int argc, char const *argv[])
     int status;
     if (pid1 == -1)
     {
-        printf("erreur fork 1\n");
+        perror("fork1");
         return (EXIT_FAILURE);
     }
     if (pid1 == 0) // on se situe dans le processus fils 1
     {
         printf("Je stop le fils 1 (PID=%d)\n", getpid());
-        kill(getpid(), SIGSTOP); // on stop le fils 1 en attendant que le fils 2 écrive dans son fichier
+        if (kill(getpid(), SIGSTOP) == -1) // on stop le fils 1 en attendant que le fils 2 écrive dans son fichier
+        {
+            printf("Le fils 1 n'a pas pu être stoppé, on arrête le programme principal\n");
+            perror("kill");
+            return (EXIT_FAILURE);
+        }
         printf("Je suis le fils 1 (PID=%d)\n", getpid());
         printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB1, NOMFICHIER1);
-        ecrire_fils(NB1, NOMFICHIER1); // on écrit dans NOMFICHIER1 NB1
+        ecrire_fils(NB1, NOMFICHIER1); // on écrit NB1 dans NOMFICHIER1
         exit(0);
     }
-    pid_t pid2 = fork(); //on crée un processus fils 2
+    pid_t pid2 = fork(); // on crée un processus fils 2
     if (pid2 == -1)
     {
-        printf("erreur fork 2\n");
+        perror("fork2");
         return (EXIT_FAILURE);
     }
     if (pid2 == 0) // on se situe dans le processus fils 2
     {
         printf("Je suis le fils 2 (PID=%d)\n", getpid());
         printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB2, NOMFICHIER2);
-        ecrire_fils(NB2, NOMFICHIER2); // on écrit dans NOMFICHIER2 NB2
+        ecrire_fils(NB2, NOMFICHIER2); // on écrit NB2 dans NOMFICHIER2
         exit(0);
     }
     else
@@ -96,9 +102,15 @@ int main(int argc, char const *argv[])
         }
         if (st_fils2 == 0) // fils 2 a bien écrit dans son fichier
         {
-            kill(pid1, SIGCONT); // on réactive le fils 1
+            printf("On réactive le fils 1\n");
+            if (kill(pid1, SIGCONT) == -1) // on réactive le fils 1
+            {
+                printf("Le fils 1 n'a pas pu être réactivé, on arrête le programme principal\n");
+                perror("kill");
+                return (EXIT_FAILURE);
+            }
         }
-        else
+        else //
         {
             printf("Le fils 2 n'a pas pu écrire dans son fichier, on arrête le programme principal\n");
             return (EXIT_FAILURE);
