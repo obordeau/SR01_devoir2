@@ -5,9 +5,9 @@
 #include <sys/wait.h>  // wait()...
 #include <errno.h>     // perror()
 
-#define NOMFICHIER1 "fichier1"
+#define NAME1 "fichier1"
 #define NB1 7
-#define NOMFICHIER2 "fichier2"
+#define NAME2 "fichier2"
 #define NB2 19
 
 void ecrire_fils(int nb, char *name)
@@ -76,8 +76,8 @@ int main(int argc, char const *argv[])
             return (EXIT_FAILURE);
         }
         printf("Je suis le fils 1 (PID=%d)\n", getpid());
-        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB1, NOMFICHIER1);
-        ecrire_fils(NB1, NOMFICHIER1); // on écrit NB1 dans NOMFICHIER1
+        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB1, NAME1);
+        ecrire_fils(NB1, NAME1); // on écrit NB1 dans NAME1
         exit(0);
     }
     pid_t pid2 = fork(); // on crée un processus fils 2
@@ -89,8 +89,8 @@ int main(int argc, char const *argv[])
     if (pid2 == 0) // on se situe dans le processus fils 2
     {
         printf("Je suis le fils 2 (PID=%d)\n", getpid());
-        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB2, NOMFICHIER2);
-        ecrire_fils(NB2, NOMFICHIER2); // on écrit NB2 dans NOMFICHIER2
+        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB2, NAME2);
+        ecrire_fils(NB2, NAME2); // on écrit NB2 dans NAME2
         exit(0);
     }
     else
@@ -125,13 +125,13 @@ int main(int argc, char const *argv[])
             return (EXIT_FAILURE);
         }
         printf("Je suis le père (PID=%d)\n", getppid());
-        printf("    Je vais récupérer le chiffre écrit par mon fils 1 dans le fichier \"%s\"\n", NOMFICHIER1);
+        printf("    Je vais récupérer le chiffre écrit par mon fils 1 dans le fichier \"%s\"\n", NAME1);
         int nb1;
-        lire_pere(&nb1, NOMFICHIER1);
+        lire_pere(&nb1, NAME1);
         printf("    Le fils 1 avait écrit %d dans le fichier\n", nb1);
-        printf("    Je vais récupérer le chiffre écrit par mon fils 2 dans le fichier \"%s\"\n", NOMFICHIER2);
+        printf("    Je vais récupérer le chiffre écrit par mon fils 2 dans le fichier \"%s\"\n", NAME2);
         int nb2;
-        lire_pere(&nb2, NOMFICHIER2);
+        lire_pere(&nb2, NAME2);
         printf("    Le fils 2 avait écrit %d dans le fichier\n", nb2);
     }
     return 0;

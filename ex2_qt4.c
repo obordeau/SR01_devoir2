@@ -5,7 +5,7 @@
 #include <sys/wait.h>  // wait()...
 #include <errno.h>     // perror()
 
-#define NOMFICHIER "fichier"
+#define NAME "fichier"
 #define NB 5
 
 void ecrire_fils(int nb, char *name)
@@ -67,17 +67,17 @@ int main(int argc, char const *argv[])
         break;
     case 0: // si pid == 0 alors on est dans le fils
         printf("Je suis le fils\n");
-        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB, NOMFICHIER);
-        ecrire_fils(NB, NOMFICHIER); // on écrit NB dans le fichier de nom NOMFICHIER
+        printf("    Je vais écrire %d dans le fichier \"%s\"\n", NB, NAME);
+        ecrire_fils(NB, NAME); // on écrit NB dans le fichier de nom NAME
         break;
     default:           // sinon pid > 0 alors on est dans le père
         wait(&status); // on attends que son fils retourne un statut
         printf("Je suis le père\n");
         if (status == 0) // si le statut retourné est 0 alors son fils a bien écrit dans le fichier
         {
-            printf("    Je vais récupérer le nombre écrit par mon fils dans le fichier \"%s\"\n", NOMFICHIER);
+            printf("    Je vais récupérer le nombre écrit par mon fils dans le fichier \"%s\"\n", NAME);
             int nb;
-            lire_pere(&nb, NOMFICHIER);                                 // on récupère le nombre écrit dans le fichier par son fils
+            lire_pere(&nb, NAME);                                       // on récupère le nombre écrit dans le fichier par son fils
             printf("    Le fils avait écrit %d dans le fichier\n", nb); // affichage du résultat
         }
         else
