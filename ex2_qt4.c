@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <stdlib.h>    // exit()...
+#include <stdio.h>     // printf()...
+#include <unistd.h>    // getpid()...
+#include <sys/types.h> // pid_t
+#include <sys/wait.h>  // wait()...
 
 void ecrire_fils(int nb, char *name)
 {
