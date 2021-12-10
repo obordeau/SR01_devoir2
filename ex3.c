@@ -1,14 +1,16 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <stdlib.h>    // exit()...
+#include <stdio.h>     // printf()...
+#include <unistd.h>    // getpid()...
+#include <sys/types.h> // pid_t
+#include <sys/wait.h>  // wait()...
+#include <errno.h>     // perror()
 #include <time.h>
 
 #define LEN 10
 #define MAX 100
 #define SEUIL 3
 
+// Fonction utilisée et commentée dans l'exercice 2
 void ecrire_fils(int nb, char *name)
 {
     FILE *file = fopen(name, "w");
@@ -29,6 +31,7 @@ void ecrire_fils(int nb, char *name)
     }
 }
 
+// Fonction utilisée et commentée dans l'exercice 2
 void lire_pere(int *nb, char *name)
 {
     FILE *file = fopen(name, "r");
@@ -88,7 +91,12 @@ int find_max(int *tab, int debut, int fin)
         pid_t pid1 = fork();
         if (pid1 == 0)
         {
-            kill(getpid(), SIGSTOP);
+            if (kill(getpid(), SIGSTOP) == -1)
+            {
+                printf("Un fils n'a pas pu être stoppé\n");
+                perror("kill");
+                return (EXIT_FAILURE);
+            }
             int local_max = find_max(tab, debut, (debut + fin) / 2);
             ecrire_fils(local_max, "fichier1");
             exit(EXIT_SUCCESS);
@@ -107,15 +115,32 @@ int find_max(int *tab, int debut, int fin)
                 perror("waitpid");
                 exit(EXIT_FAILURE);
             }
+            if (status2 != 0)
+            {
+                printf("Un fils a retourné un statut d'erreur\n");
+                exit(EXIT_FAILURE);
+            }
             int max_fin;
             lire_pere(&max_fin, "fichier2");
 
-            kill(pid1, SIGCONT);
+            if (kill(pid1, SIGCONT) == -1)
+            {
+                printf("Un fils n'a pas pu être réactivé\n");
+                perror("kill");
+                return (EXIT_FAILURE);
+            }
             if (waitpid(pid1, &status1, 0) == -1)
             {
                 perror("waitpid");
                 exit(EXIT_FAILURE);
             }
+
+            if (status1 != 0)
+            {
+                printf("Un fils a retourné un statut d'erreur\n");
+                exit(EXIT_FAILURE);
+            }
+
             int max_debut;
             lire_pere(&max_debut, "fichier1");
 
